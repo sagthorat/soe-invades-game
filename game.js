@@ -94,7 +94,7 @@ const CONFIG = {
     // Branding
     BRANDING: {
         title: 'SOE INVADERS',
-        subtitle: 'Cenitex Managed SOEs vs Marketplace Threats',
+        subtitle: 'Cenitex Managed SOEs vs Non Standard Images',
         organization: 'CenITex Connect',
         cloudProviders: ['AWS', 'Azure', 'OCI', 'VMware']
     },
@@ -828,7 +828,7 @@ function renderWelcome() {
     // Footer message
     ctx.fillStyle = '#888888';
     ctx.font = '14px "Courier New", monospace';
-    ctx.fillText('Cenitex Gold Standard SOEs eliminate marketplace image risks', CONFIG.CANVAS_WIDTH / 2, 500);
+    ctx.fillText('Cenitex Gold Standard SOEs eliminate non standard image risks', CONFIG.CANVAS_WIDTH / 2, 500);
     ctx.fillText('Engineered with GitHub Actions & HashiCorp Packer', CONFIG.CANVAS_WIDTH / 2, 525);
 }
 
@@ -846,7 +846,7 @@ function renderInstructions() {
 
     const instructions = [
         'OBJECTIVE:',
-        '  Use Cenitex managed SOEs to eliminate marketplace threats',
+        '  Use Cenitex managed SOEs to eliminate non standard image threats',
         '',
         'KEYBOARD CONTROLS:',
         '  Arrow Keys or A/D - Move left and right',
@@ -857,7 +857,7 @@ function renderInstructions() {
         '  Move Mouse/Drag - Player follows position',
         '  Click/Tap - Fire Cenitex SOE solutions',
         '',
-        'MARKETPLACE IMAGE THREATS:',
+        'NON STANDARD IMAGE THREATS:',
         '  Missing Security Patches (Red) - 100 points',
         '  Missing Agents (Orange) - 150 points',
         '  No Monitoring/Backup (Yellow) - 200 points',
