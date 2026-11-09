@@ -233,21 +233,48 @@ class Player {
     }
 
     draw(ctx) {
-        // Draw player as rectangle with border
+        ctx.save();
+
+        // Draw cannon base (wider trapezoid)
         ctx.fillStyle = CONFIG.PLAYER_COLOR;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.beginPath();
+        ctx.moveTo(this.x + 5, this.y + this.height); // Bottom left
+        ctx.lineTo(this.x + this.width - 5, this.y + this.height); // Bottom right
+        ctx.lineTo(this.x + this.width - 10, this.y + 15); // Top right
+        ctx.lineTo(this.x + 10, this.y + 15); // Top left
+        ctx.closePath();
+        ctx.fill();
         ctx.strokeStyle = CONFIG.PLAYER_COLOR;
         ctx.lineWidth = 2;
-        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        ctx.stroke();
 
-        // Draw "Cenitex SOE" label above player
+        // Draw cannon turret (middle section)
+        ctx.fillRect(this.x + 15, this.y + 8, this.width - 30, 12);
+        ctx.strokeRect(this.x + 15, this.y + 8, this.width - 30, 12);
+
+        // Draw cannon barrel (pointing upward)
+        const barrelWidth = 8;
+        const barrelHeight = 12;
+        const barrelX = this.x + this.width / 2 - barrelWidth / 2;
+        ctx.fillRect(barrelX, this.y, barrelWidth, barrelHeight);
+        ctx.strokeRect(barrelX, this.y, barrelWidth, barrelHeight);
+
+        // Draw muzzle tip
+        ctx.beginPath();
+        ctx.arc(barrelX + barrelWidth / 2, this.y, barrelWidth / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+
+        // Draw "Cenitex SOE" label above cannon
         ctx.save();
         ctx.font = 'bold 9px "Courier New", monospace';
         ctx.fillStyle = CONFIG.PLAYER_COLOR;
         ctx.textAlign = 'center';
         ctx.shadowBlur = 5;
         ctx.shadowColor = CONFIG.PLAYER_COLOR;
-        ctx.fillText('CENITEX SOE', this.x + this.width / 2, this.y - 5);
+        ctx.fillText('CENITEX SOE', this.x + this.width / 2, this.y - 8);
         ctx.shadowBlur = 0;
         ctx.restore();
     }
