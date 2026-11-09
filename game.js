@@ -418,15 +418,28 @@ function triggerScreenShake() {
 }
 
 // === SOUND SYSTEM ===
-const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioContext;
 let soundEnabled = true;
 
 function initAudio() {
+    if (audioContext) return; // Already initialized
+
     try {
-        audioContext = new AudioContext();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioContext = new AudioContextClass();
+
+            // Resume context if suspended (required by some browsers)
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            console.log('Audio initialized successfully');
+        } else {
+            throw new Error('Web Audio API not supported');
+        }
     } catch (e) {
-        console.warn('Web Audio API not supported');
+        console.warn('Web Audio API not supported:', e);
         soundEnabled = false;
     }
 }
@@ -434,65 +447,74 @@ function initAudio() {
 function playSound(type) {
     if (!soundEnabled || !audioContext) return;
 
-    const now = audioContext.currentTime;
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    try {
+        // Resume audio context if suspended
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+        const now = audioContext.currentTime;
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-    switch (type) {
-        case 'shoot':
-            // Laser shoot sound
-            oscillator.frequency.setValueAtTime(800, now);
-            oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
-            gainNode.gain.setValueAtTime(0.15, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            oscillator.start(now);
-            oscillator.stop(now + 0.1);
-            break;
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
 
-        case 'explosion':
-            // Enemy explosion
-            oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(150, now);
-            oscillator.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-            gainNode.gain.setValueAtTime(0.2, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            oscillator.start(now);
-            oscillator.stop(now + 0.2);
-            break;
+        switch (type) {
+            case 'shoot':
+                // Laser shoot sound
+                oscillator.frequency.setValueAtTime(800, now);
+                oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                oscillator.start(now);
+                oscillator.stop(now + 0.1);
+                break;
 
-        case 'hit':
-            // Life lost
-            oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(400, now);
-            oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
-            gainNode.gain.setValueAtTime(0.25, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            oscillator.start(now);
-            oscillator.stop(now + 0.3);
-            break;
+            case 'explosion':
+                // Enemy explosion
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(150, now);
+                oscillator.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                oscillator.start(now);
+                oscillator.stop(now + 0.2);
+                break;
 
-        case 'countdown':
-            // Countdown beep
-            oscillator.frequency.setValueAtTime(600, now);
-            gainNode.gain.setValueAtTime(0.1, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            oscillator.start(now);
-            oscillator.stop(now + 0.1);
-            break;
+            case 'hit':
+                // Life lost
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(400, now);
+                oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+                gainNode.gain.setValueAtTime(0.25, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                oscillator.start(now);
+                oscillator.stop(now + 0.3);
+                break;
 
-        case 'gameOver':
-            // Game over sound
-            oscillator.type = 'triangle';
-            oscillator.frequency.setValueAtTime(300, now);
-            oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.5);
-            gainNode.gain.setValueAtTime(0.2, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            oscillator.start(now);
-            oscillator.stop(now + 0.5);
-            break;
+            case 'countdown':
+                // Countdown beep
+                oscillator.frequency.setValueAtTime(600, now);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                oscillator.start(now);
+                oscillator.stop(now + 0.1);
+                break;
+
+            case 'gameOver':
+                // Game over sound
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(300, now);
+                oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.5);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                oscillator.start(now);
+                oscillator.stop(now + 0.5);
+                break;
+        }
+    } catch (e) {
+        console.warn('Error playing sound:', e);
     }
 }
 
@@ -761,13 +783,13 @@ function renderWelcome() {
 
     // Organization badge
     ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
-    ctx.fillRect(CONFIG.CANVAS_WIDTH / 2 - 80, 210, 160, 35);
+    ctx.fillRect(CONFIG.CANVAS_WIDTH / 2 - 110, 210, 220, 35);
     ctx.strokeStyle = '#00ffff';
     ctx.lineWidth = 2;
-    ctx.strokeRect(CONFIG.CANVAS_WIDTH / 2 - 80, 210, 160, 35);
+    ctx.strokeRect(CONFIG.CANVAS_WIDTH / 2 - 110, 210, 220, 35);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px "Courier New", monospace';
+    ctx.font = 'bold 18px "Courier New", monospace';
     ctx.fillText(CONFIG.BRANDING.organization, CONFIG.CANVAS_WIDTH / 2, 235);
 
     // Cloud providers
@@ -1037,27 +1059,27 @@ function renderResults() {
 
     // Educational message box
     ctx.fillStyle = 'rgba(0, 255, 0, 0.05)';
-    ctx.fillRect(80, 285, 640, 150);
+    ctx.fillRect(60, 285, 680, 160);
     ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 2;
-    ctx.strokeRect(80, 285, 640, 150);
+    ctx.strokeRect(60, 285, 680, 160);
 
     ctx.fillStyle = '#00ffff';
-    ctx.font = 'bold 16px "Courier New", monospace';
-    ctx.fillText('Why choose Cenitex Gold Standard SOEs?', CONFIG.CANVAS_WIDTH / 2, 310);
+    ctx.font = 'bold 15px "Courier New", monospace';
+    ctx.fillText('Why choose Cenitex Gold Standard SOEs?', CONFIG.CANVAS_WIDTH / 2, 308);
 
     ctx.fillStyle = '#cccccc';
-    ctx.font = '13px "Courier New", monospace';
+    ctx.font = '12px "Courier New", monospace';
     const message = [
         'Cenitex Gold Standard SOEs are pre-engineered, secured,',
-        'patched and configured through automated pipelines using',
-        'GitHub Actions and HashiCorp Packer.',
+        'patched and configured through automated pipelines',
+        'using GitHub Actions and HashiCorp Packer.',
         '',
         'Available across AWS, Azure, OCI and VMware.',
         'Build once. Deploy consistently. Start production-ready.'
     ];
 
-    let y = 335;
+    let y = 333;
     for (let line of message) {
         ctx.fillText(line, CONFIG.CANVAS_WIDTH / 2, y);
         y += 18;
