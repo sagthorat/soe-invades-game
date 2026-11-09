@@ -95,7 +95,7 @@ const CONFIG = {
     BRANDING: {
         title: 'SOE INVADERS',
         subtitle: 'Cenitex Managed SOEs vs Marketplace Threats',
-        organization: 'CONNECT',
+        organization: 'CenITex Connect',
         cloudProviders: ['AWS', 'Azure', 'OCI', 'VMware']
     },
 
@@ -229,6 +229,7 @@ class Player {
         const projectileX = this.x + this.width / 2 - CONFIG.PROJECTILE_WIDTH / 2;
         const projectileY = this.y;
         projectiles.push(new Projectile(projectileX, projectileY));
+        playSound('shoot');
     }
 
     draw(ctx) {
@@ -416,6 +417,85 @@ function triggerScreenShake() {
     screenShake.intensity = CONFIG.SCREEN_SHAKE_INTENSITY;
 }
 
+// === SOUND SYSTEM ===
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioContext;
+let soundEnabled = true;
+
+function initAudio() {
+    try {
+        audioContext = new AudioContext();
+    } catch (e) {
+        console.warn('Web Audio API not supported');
+        soundEnabled = false;
+    }
+}
+
+function playSound(type) {
+    if (!soundEnabled || !audioContext) return;
+
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    switch (type) {
+        case 'shoot':
+            // Laser shoot sound
+            oscillator.frequency.setValueAtTime(800, now);
+            oscillator.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+            gainNode.gain.setValueAtTime(0.15, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            oscillator.start(now);
+            oscillator.stop(now + 0.1);
+            break;
+
+        case 'explosion':
+            // Enemy explosion
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(150, now);
+            oscillator.frequency.exponentialRampToValueAtTime(50, now + 0.2);
+            gainNode.gain.setValueAtTime(0.2, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            oscillator.start(now);
+            oscillator.stop(now + 0.2);
+            break;
+
+        case 'hit':
+            // Life lost
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(400, now);
+            oscillator.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+            gainNode.gain.setValueAtTime(0.25, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            oscillator.start(now);
+            oscillator.stop(now + 0.3);
+            break;
+
+        case 'countdown':
+            // Countdown beep
+            oscillator.frequency.setValueAtTime(600, now);
+            gainNode.gain.setValueAtTime(0.1, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            oscillator.start(now);
+            oscillator.stop(now + 0.1);
+            break;
+
+        case 'gameOver':
+            // Game over sound
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(300, now);
+            oscillator.frequency.exponentialRampToValueAtTime(150, now + 0.5);
+            gainNode.gain.setValueAtTime(0.2, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            oscillator.start(now);
+            oscillator.stop(now + 0.5);
+            break;
+    }
+}
+
 // === SPAWN SYSTEM ===
 let spawnTimer = 0;
 
@@ -470,6 +550,9 @@ function checkCollisions() {
                 const particleY = enemy.y + enemy.height / 2;
                 createParticles(particleX, particleY, enemy.type.color);
 
+                // Play explosion sound
+                playSound('explosion');
+
                 // Remove enemy
                 enemies.splice(j, 1);
 
@@ -498,11 +581,15 @@ function checkCollisions() {
             // Screen shake on life lost
             triggerScreenShake();
 
+            // Play hit sound
+            playSound('hit');
+
             enemies.splice(i, 1);
             GAME.lives--;
 
             if (GAME.lives <= 0) {
                 GAME.state = GameStates.RESULTS;
+                playSound('gameOver');
             }
         }
     }
@@ -521,7 +608,15 @@ function update(deltaTime) {
 }
 
 function updateCountdown(deltaTime) {
+    const previousCount = Math.ceil(GAME.countdownRemaining);
     GAME.countdownRemaining -= deltaTime;
+    const currentCount = Math.ceil(GAME.countdownRemaining);
+
+    // Play beep on each countdown number
+    if (currentCount !== previousCount && currentCount > 0) {
+        playSound('countdown');
+    }
+
     if (GAME.countdownRemaining <= 0) {
         GAME.state = GameStates.GAMEPLAY;
     }
@@ -533,6 +628,7 @@ function updateGameplay(deltaTime) {
     if (GAME.timeRemaining <= 0) {
         GAME.timeRemaining = 0;
         GAME.state = GameStates.RESULTS;
+        playSound('gameOver');
         return;
     }
 
@@ -1041,6 +1137,12 @@ canvas.addEventListener('mouseleave', () => {
 
 canvas.addEventListener('mousedown', (e) => {
     e.preventDefault();
+
+    // Initialize audio on first click
+    if (!audioContext) {
+        initAudio();
+    }
+
     if (GAME.state === GameStates.GAMEPLAY) {
         Input.mouse.clicked = true;
     }
@@ -1061,6 +1163,12 @@ canvas.addEventListener('click', (e) => {
 // Touch event listeners
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
+
+    // Initialize audio on first touch
+    if (!audioContext) {
+        initAudio();
+    }
+
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     Input.touch.x = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
@@ -1103,6 +1211,11 @@ canvas.addEventListener('touchcancel', (e) => {
 });
 
 function handleStateInput(key) {
+    // Initialize audio on first user interaction
+    if (!audioContext) {
+        initAudio();
+    }
+
     switch (GAME.state) {
         case GameStates.WELCOME:
             if (key === ' ') {
