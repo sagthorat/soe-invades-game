@@ -33,27 +33,27 @@ const CONFIG = {
             shortName: 'Unpatched',
             issue: 'Missing Security Patches',
             points: 100,
-            baseSpeed: 50,
+            baseSpeed: 35,
             color: '#ff4444',
-            horizontalSpeed: 30
+            horizontalSpeed: 20
         },
         {
             name: 'Unsecured Image',
             shortName: 'Unsecured',
             issue: 'Missing Agents',
             points: 150,
-            baseSpeed: 75,
+            baseSpeed: 50,
             color: '#ff8800',
-            horizontalSpeed: 45
+            horizontalSpeed: 30
         },
         {
             name: 'Incomplete Image',
             shortName: 'Incomplete',
             issue: 'No Monitoring/Backup',
             points: 200,
-            baseSpeed: 100,
+            baseSpeed: 65,
             color: '#ffff00',
-            horizontalSpeed: 60
+            horizontalSpeed: 40
         }
     ],
 
@@ -61,20 +61,20 @@ const CONFIG = {
     DIFFICULTY_LEVELS: [
         {
             time: 0,
-            spawnInterval: 2.0,
+            spawnInterval: 2.5,
             speedMultiplier: 1.0,
             description: 'Easy'
         },
         {
             time: 20,
-            spawnInterval: 1.2,
-            speedMultiplier: 1.5,
+            spawnInterval: 1.8,
+            speedMultiplier: 1.3,
             description: 'Moderate'
         },
         {
             time: 40,
-            spawnInterval: 0.7,
-            speedMultiplier: 2.0,
+            spawnInterval: 1.2,
+            speedMultiplier: 1.6,
             description: 'Challenging'
         }
     ],
@@ -86,9 +86,9 @@ const CONFIG = {
     // Performance ratings
     PERFORMANCE_RATINGS: [
         { minScore: 0, rating: 'Cloud Rookie' },
-        { minScore: 501, rating: 'Cloud Defender' },
-        { minScore: 1501, rating: 'Cloud Guardian' },
-        { minScore: 3001, rating: 'Gold Standard Hero' }
+        { minScore: 400, rating: 'Cloud Defender' },
+        { minScore: 1200, rating: 'Cloud Guardian' },
+        { minScore: 2400, rating: 'Gold Standard Hero' }
     ],
 
     // Branding
